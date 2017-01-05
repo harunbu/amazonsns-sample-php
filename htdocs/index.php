@@ -7,6 +7,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 //詳細は以下参照。
 //http://docs.aws.amazon.com/aws-sdk-php/v2/guide/credentials.html#credential-profiles
 
+
 //設定値（運用時はアプリケーションの設定ファイルで管理推奨）
 $platformApplicationArn = 'arn:aws:sns:ap-northeast-1:889618090367:app/GCM/sns_test';
 $snsClientConfig = [
