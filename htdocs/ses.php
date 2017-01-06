@@ -33,6 +33,12 @@ if ($_POST['SendEmail']) {
         'Subject' => ['Data' => $subject]], 'Source' => $source];
     $result = $client->sendEmail($mail);
 }
+
+//メールアドレス認証
+if ($_POST['VerifyEmailIdentity']) {
+    $emailAddress = $_POST['EmailAddress'];
+}
+
 ?>
 
 <!DOCTYPE html>
