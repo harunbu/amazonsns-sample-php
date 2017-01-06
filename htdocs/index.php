@@ -33,7 +33,7 @@ $defaults = [
 if ($_POST['Publish']) {
     try {
         $message = $_POST['message'];
-        $targetArn = $_POST['targetArn'];
+        $targetArn = $_POST['TargetArn'];
         $msg = [
             'Message' => $message,
             'TargetArn' => $targetArn,
@@ -44,7 +44,7 @@ if ($_POST['Publish']) {
         exit;
     }
 
-    $defaults['targetArn'] = $_POST['targetArn'];
+    $defaults['targetArn'] = $_POST['TargetArn'];
     $defaults['message'] = $_POST['message'];
 }
 
@@ -178,8 +178,8 @@ $endpoints = $client->listEndpointsByPlatformApplication([
         </p>
         <form method="post">
             <div class="form-group">
-                <label for="targetArn">targetArn</label>
-                <input type="text" name="targetArn" id="targetArn" value="<?=$defaults['targetArn']?>" title="targetArn" class="form-control">
+                <label for="TargetArn">TargetArn</label>
+                <input type="text" name="TargetArn" id="TargetArn" value="<?=$defaults['targetArn']?>" title="TargetArn" class="form-control">
             </div>
             <div class="form-group">
                 <label for="message">message</label>
