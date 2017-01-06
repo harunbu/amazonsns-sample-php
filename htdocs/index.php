@@ -27,11 +27,10 @@ $defaults = [
 ];
 
 //メッセージ送信=================================================================
-if ($_POST['publish']) {
+if ($_POST['Publish']) {
     try {
         $message = $_POST['message'];
         $targetArn = $_POST['targetArn'];
-        // publish
         $msg = [
             'Message' => $message,
             'TargetArn' => $targetArn,
@@ -47,9 +46,8 @@ if ($_POST['publish']) {
 }
 
 //エンドポイント作成=================================================================
-if ($_POST['createEndpoint']) {
+if ($_POST['CreatePlatformEndpoint']) {
     try {
-        // エンドポイント登録
         $token = $_POST['token'];
         $params = [
             'PlatformApplicationArn' => $platformApplicationArn,
@@ -64,10 +62,39 @@ if ($_POST['createEndpoint']) {
     $defaults['token'] = $_POST['token'];
 }
 
-//サブスクライブ=================================================================
-if ($_POST['subscribe']) {
+//エンドポイント削除=================================================================
+if ($_POST['DeleteEndpoint']) {
     try {
-        $endpointArn = $_POST['endpointArn'];
+        $endpointArn = $_POST['EndpointArn'];
+        $params = [
+            'EndpointArn' => $endpointArn,
+        ];
+        $client->deleteEndpoint($params);
+    } catch (Aws\Sns\Exception\SnsException $e) {
+        echo $e->getMessage();
+        exit;
+    }
+}
+
+//アンサブスクライブ=================================================================
+if ($_POST['Unsubscribe']) {
+    try {
+        $subscriptionArn = $_POST['subscriptionArn'];
+        $params = [
+            'SubscriptionArn' => $subscriptionArn
+        ];
+        $result = $client->unsubscribe($params);
+        echo '<pre>';var_dump($result);echo '</pre>';
+    } catch (Aws\Sns\Exception\SnsException $e) {
+        echo $e->getMessage();
+        exit;
+    }
+}
+
+//サブスクライブ=================================================================
+if ($_POST['Subscribe']) {
+    try {
+        $endpointArn = $_POST['EndpointArn'];
         $topicArn = $_POST['topicArn'];
         $params = [
             'Endpoint' => $endpointArn,
@@ -83,12 +110,28 @@ if ($_POST['subscribe']) {
     $defaults['token'] = $_POST['token'];
 }
 
+//トピックの作成=================================================================
+if ($_POST['CreateTopic']) {
+    try {
+        $name = $_POST['Name'];
+        $params = [
+            'Name' => $name,
+        ];
+        $client->createTopic($params);
+    } catch (Aws\Sns\Exception\SnsException $e) {
+        echo $e->getMessage();
+        exit;
+    }
+
+    $defaults['token'] = $_POST['token'];
+}
+
 //トピックスに紐づいたサブスクリプションの確認=================================================================
 $subscriptionsByTopic = null;
 $topicArn = '';
-if ($_GET['ListSubscription']) {
+if ($_GET['ListSubscriptionsByTopic']) {
     try {
-        $topicArn = $_GET['ListSubscription'];
+        $topicArn = $_GET['ListSubscriptionsByTopic'];
         $params = [
             'TopicArn' => $topicArn
         ];
@@ -109,7 +152,8 @@ $endpoints = $client->listEndpointsByPlatformApplication([
 
 ?>
 
-<html lang="jp">
+<!DOCTYPE html>
+<html lang="ja">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -138,15 +182,20 @@ $endpoints = $client->listEndpointsByPlatformApplication([
                 <label for="message">message</label>
                 <input type="text" name="message" id="message" value="<?=$defaults['message']?>" title="message" class="form-control">
             </div>
-            <input type="submit" value="publish" name="publish" class="btn btn-primary">
+            <input type="submit" value="Publish" name="Publish" class="btn btn-primary">
         </form>
 
-        <h2 class="page-header">Endpoints</h2>
+        <h2 class="page-header">ListEndpointsByPlatformApplication</h2>
         <p>
             アプリケーションに登録されたエンドポイントの一覧。100件ずつ取得可能。このサンプルでは最初の100件のみ表示。
         </p>
+        <dl class="dl-horizontal">
+            <dt>DeleteEndpoint</dt>
+            <dd>エンドポイントを削除する。</dd>
+        </dl>
         <table class="table table-bordered">
             <tr class="table-header">
+                <th rowspan="2">Actions</th>
                 <th rowspan="2">EndpointArn</th>
                 <th colspan="2">Attributes</th>
             </tr>
@@ -156,6 +205,12 @@ $endpoints = $client->listEndpointsByPlatformApplication([
             </tr>
             <?php foreach ($endpoints['Endpoints'] as $endpoint) : ?>
                 <tr>
+                    <td>
+                        <form method="post">
+                            <input type="hidden" name="EndpointArn" value="<?=$endpoint['EndpointArn']?>">
+                            <input type="submit" name="DeleteEndpoint" value="DeleteEndpoint" class="btn btn-warning">
+                        </form>
+                    </td>
                     <td><input class="form-control" value="<?=$endpoint['EndpointArn']?>" disabled></td>
                     <td><?=$endpoint['Attributes']['Enabled']?></td>
                     <td><input class="form-control" value="<?=$endpoint['Attributes']['Token']?>" disabled></td>
@@ -163,7 +218,7 @@ $endpoints = $client->listEndpointsByPlatformApplication([
             <?php endforeach ?>
         </table>
 
-        <h2 class="page-header">Create Platform Endpoint</h2>
+        <h2 class="page-header">CreatePlatformEndpoint</h2>
         <p>
             デバイストークン、登録IDをアプリケーションに登録する。登録済みだった場合は何も起こらない。現状Androidにのみ対応。
         </p>
@@ -172,13 +227,17 @@ $endpoints = $client->listEndpointsByPlatformApplication([
                 <label for="token">token</label>
                 <input type="text" name="token" id="token" value="<?=$defaults['token']?>" title="token" class="form-control">
             </div>
-            <input type="submit" value="create" name="createEndpoint" class="btn btn-primary">
+            <input type="submit" value="Create" name="CreatePlatformEndpoint" class="btn btn-primary">
         </form>
 
-        <h2 class="page-header">Topics</h2>
+        <h2 class="page-header">ListTopics</h2>
         <p>
             トピックスの一覧。100件ずつ取得可能。このサンプルでは最初の100件のみ表示。
         </p>
+        <dl class="dl-horizontal">
+            <dt style="width: 200px;">ListSubscriptionsByTopic</dt>
+            <dd style="margin-left: 220px;">トピックに紐づいたサブスクリプション（エンドポイント）の一覧を表示する。</dd>
+        </dl>
         <table class="table table-bordered">
             <tr>
                 <th>Actions</th>
@@ -187,20 +246,26 @@ $endpoints = $client->listEndpointsByPlatformApplication([
             <?php foreach ($topics['Topics'] as $topic) : ?>
                 <tr>
                     <td>
-                        <a href="?ListSubscription=<?=urlencode($topic['TopicArn'])?>">ListSubscription</a>
+                        <a href="?ListSubscriptionsByTopic=<?=urlencode($topic['TopicArn'])?>" class="btn btn-info">ListSubscriptionsByTopic</a>
                     </td>
                     <td><input class="form-control" value="<?=$topic['TopicArn']?>" disabled></td>
                 </tr>
             <?php endforeach ?>
         </table>
+
+        <h2 class="page-header">ListSubscriptionsByTopic</h2>
+        <p>
+            トピックに紐づいたサブスクリプション（エンドポイント）の一覧。100件ずつ取得可能。このサンプルでは最初の100件のみ表示。
+        </p>
+        <dl class="dl-horizontal">
+            <dt>Unsubscribe</dt>
+            <dd>トピックのサブスクライブを解除する。</dd>
+        </dl>
         <?php if ($subscriptionsByTopic) : ?>
-            <h2 class="page-header">Subscriptions by Topic</h2>
-            <p>target topic : <?=$topicArn?></p>
-            <p>
-                トピックに紐づいたサブスクリプション（エンドポイント）の一覧。100件ずつ取得可能。このサンプルでは最初の100件のみ表示。
-            </p>
+            <p class="text-info">target topic : <?=$topicArn?></p>
             <table class="table table-bordered">
                 <tr>
+                    <th>Actions</th>
                     <th>SubscriptionArn</th>
                     <th>Owner</th>
                     <th>Protocol</th>
@@ -208,6 +273,12 @@ $endpoints = $client->listEndpointsByPlatformApplication([
                 </tr>
                 <?php foreach ($subscriptionsByTopic['Subscriptions'] as $subscription) : ?>
                     <tr>
+                        <td>
+                            <form method="post">
+                                <input type="hidden" name="subscriptionArn" value="<?=$subscription['SubscriptionArn']?>">
+                                <input type="submit" class="btn btn-warning" name="Unsubscribe" value="Unsubscribe">
+                            </form>
+                        </td>
                         <td><input class="form-control" value="<?=$subscription['SubscriptionArn']?>" disabled></td>
                         <td><?=$subscription['Owner']?></td>
                         <td><?=$subscription['Protocol']?></td>
@@ -215,22 +286,39 @@ $endpoints = $client->listEndpointsByPlatformApplication([
                     </tr>
                 <?php endforeach ?>
             </table>
+        <?php else : ?>
+            <p>
+                Topic一覧で「ListSubscriptionsByTopic」をクリックすると表示される。
+            </p>
         <?php endif ?>
 
-        <h2 class="page-header">Subscribe</h2>
+        <h2 class="page-header">CreateTopic</h2>
         <p>
-            エンドポイントをトピックに登録する。
+            トピックを新規作成する。
         </p>
         <form method="post">
             <div class="form-group">
-                <label for="endpointArn">endpointArn</label>
-                <input type="text" name="endpointArn" id="endpointArn" value="<?=$defaults['endpointArn']?>" title="endpointArn" class="form-control">
+                <label for="Name">Name</label>
+                <input type="text" name="Name" id="Name" value="" title="Name" class="form-control" aria-describedby="topicNameHelp">
+                <span id="topicNameHelp" class="help-block">トピック名は大文字小文字のASCII文字、数字、アンダースコア、ハイフンのみ利用可能で、1～256文字まで。</span>
+            </div>
+            <input type="submit" value="CreateTopic" name="CreateTopic" class="btn btn-primary">
+        </form>
+
+        <h2 class="page-header">Subscribe</h2>
+        <p>
+            エンドポイントをトピックに登録する。既に登録済みの場合何も起こらない。
+        </p>
+        <form method="post">
+            <div class="form-group">
+                <label for="EndpointArn">EndpointArn</label>
+                <input type="text" name="EndpointArn" id="EndpointArn" value="<?=$defaults['endpointArn']?>" title="EndpointArn" class="form-control">
             </div>
             <div class="form-group">
                 <label for="topicArn">topicArn</label>
                 <input type="text" name="topicArn" id="topicArn" value="<?=$defaults['topicArn']?>" title="topicArn" class="form-control">
             </div>
-            <input type="submit" value="subscribe" name="subscribe" class="btn btn-primary">
+            <input type="submit" value="Subscribe" name="Subscribe" class="btn btn-primary">
         </form>
     </div>
 </body>
