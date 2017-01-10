@@ -1,5 +1,17 @@
 # Amazon SNS デモ （PHP）
 
+## SNS/SES
+
+Amazon SNS、SESの両方のデモが含まれます。
+
+### htdocs/index.php  
+
+Amazon SNS の利用サンプルです。
+
+### htdocs/ses.php
+
+Amazon SES の利用サンプルです。
+
 ## 認証
 
 Amazon SNS SDKを使うには、AWSの`アクセスキーID`と`シークレットアクセスキー`という二つの認証情報が必要になる。
