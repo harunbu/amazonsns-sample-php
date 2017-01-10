@@ -20,9 +20,7 @@ $sesClientConfig = [
 
 $client = new Aws\Ses\SesClient($sesClientConfig);
 
-$verifiedEmailAddresses = $client->listVerifiedEmailAddresses();
-
-//メール送信
+//メール送信===============================================================================
 if ($_POST['SendEmail']) {
     $source = $_POST['Source'];
     $toAddress = $_POST['ToAddresses'];
@@ -32,12 +30,29 @@ if ($_POST['SendEmail']) {
     $mail = ['Destination' => ['ToAddresses' => $toAddresses], 'Message' => ['Body' => ['Text' => ['Data' => $body]],
         'Subject' => ['Data' => $subject]], 'Source' => $source];
     $result = $client->sendEmail($mail);
+    echo '<pre>';
+    var_dump($result);
+    echo '</pre>';
 }
 
-//メールアドレス認証
+//メールアドレス認証===============================================================================
 if ($_POST['VerifyEmailIdentity']) {
     $emailAddress = $_POST['EmailAddress'];
+    $param = [
+        'EmailAddress' => $emailAddress
+    ];
+    $result = $client->verifyEmailIdentity($param);
 }
+
+//アイデンティティ削除===============================================================================
+if ($_POST['DeleteIdentity']) {
+    $result = $client->deleteIdentity([
+        'Identity' => $_POST['Identity'],
+    ]);
+}
+
+//アイデンティティ一覧取得===============================================================================
+$verifiedEmailAddresses = $client->listIdentities();
 
 ?>
 
@@ -54,7 +69,7 @@ if ($_POST['VerifyEmailIdentity']) {
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 </head>
-<body>
+<body style="padding-bottom:30px;">
     <div class="container">
         <h1>Amazon SES Demo</h1>
 
@@ -92,14 +107,28 @@ if ($_POST['VerifyEmailIdentity']) {
             <input type="submit" name="SendEmail" value="SendEmail" class="btn btn-primary">
         </form>
 
-        <h2 class="page-header">ListVerifiedEmailAddresses</h2>
+        <h2 class="page-header">ListIdentities</h2>
         <p>
-            認証されたEメールアドレスをすべて取得する。<br>
+            認証されたEメールアドレス（orドメイン）をすべて取得する。<br>
         </p>
+        <dl class="dl-horizontal">
+            <dt>DeleteIdentity</dt>
+            <dd>Eメールアドレス（orドメイン）を削除する。</dd>
+        </dl>
         <table class="table table-bordered">
-            <?php foreach ($verifiedEmailAddresses['VerifiedEmailAddresses'] as $address) : ?>
+            <tr>
+                <th>Actions</th>
+                <th>Identity</th>
+            </tr>
+            <?php foreach ($verifiedEmailAddresses['Identities'] as $address) : ?>
                 <tr>
-                    <td><?=$address?></td>
+                    <td>
+                        <form method="post">
+                            <input type="hidden" name="Identity" value="<?=$address?>">
+                            <input type="submit" name="DeleteIdentity" value="DeleteIdentity" class="btn btn-warning">
+                        </form>
+                    </td>
+                    <td><input type="text" value="<?=$address?>" class="form-control" disabled></td>
                 </tr>
             <?php endforeach ?>
         </table>
