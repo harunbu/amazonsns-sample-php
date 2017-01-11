@@ -1,11 +1,11 @@
 {
-    "name": "tecotec/amazonsns-php-sample",
+    "name": "harunbu/amazonsns-sample-php",
     "type": "project",
     "license": "MIT",
     "authors": [
         {
-            "name": "tsutsumi.harunobu",
-            "email": "tsutsumi.harunobu@tecotec.co.jp"
+            "name": "harunbu",
+            "email": "h.tsutsumi1203@gmail.com"
         }
     ],
     "minimum-stability": "dev",
